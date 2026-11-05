@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Client Promise Tracker</title>
+<style>
+:root{--ink:#1E2A2E;--dim:#5E6E72;--line:#D5DDDC;--paper:#F3F6F5;--panel:#FFFFFF;--acc:#0E5E6F;--gold:#9A7B2D;--warn:#A4312A;--ok:#2F6B4F;
+--mono:"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans);padding:26px 30px 60px}
+h1{font-size:26px;letter-spacing:-.01em}
+h1 small{font-size:14px;color:var(--dim);font-weight:400;margin-left:10px}
+.sub{color:var(--dim);font-size:14px;margin:4px 0 16px}
+#banner{display:none;background:var(--warn);color:#fff;font-weight:800;font-size:19px;padding:12px 18px;border-radius:10px;margin:0 0 16px}
+.wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+textarea{width:100%;height:118px;font:12px/1.4 var(--mono);border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel);color:var(--ink)}
+label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
+.bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.bar .f{display:flex;flex-direction:column;gap:5px}
+input[type=text]{font:15px var(--sans);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:130px}
+input[type=number]{font:15px var(--sans);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:96px}
+button{font:15px/1 var(--sans);font-weight:700;padding:11px 20px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+#fict{display:none;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);border-radius:7px;padding:4px 10px}
+#tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:6px 0 20px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.tile .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.tile .v{font-size:29px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;padding:2px 0}
+.tile .s{font-size:12px;color:var(--dim);margin-top:3px}
+.tile.acc .v{color:var(--acc)} .tile.warn .v{color:var(--warn)} .tile.gold .v{color:var(--gold)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+section h2{font-size:17px;margin-bottom:4px}
+section .why{font-size:13px;color:var(--dim);margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);text-align:left;padding:5px 8px;border-bottom:2px solid var(--line)}
+td{padding:6px 8px;border-top:1px solid #E6ECEA;font-variant-numeric:tabular-nums;vertical-align:top}
+td.n,th.n{text-align:right}
+.chip{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:1px}
+.chip.watch{color:#fff;background:var(--warn)}
+.chip.clean{color:var(--dim);background:#E6ECEA}
+.neg{color:var(--warn);font-weight:700}
+.age{font-weight:700;color:var(--warn)}
+.stmt{white-space:pre-wrap;font:13px/1.6 var(--mono);background:#EDF2F0;border:1px solid #DCE4E1;border-radius:10px;padding:12px 14px;margin:8px 0}
+#recon{font:13.5px/1.7 var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
+#recon .ok{color:var(--ok);font-weight:700} #recon .bad{color:var(--warn);font-weight:700}
+footer{margin-top:24px;font-size:12.5px;color:var(--dim)}
+@media (max-width:900px){#tiles{grid-template-columns:repeat(2,1fr)}.wrap{grid-template-columns:1fr}}
+</style></head><body>
+<h1>The Client Promise Tracker <small>what you said you'd do, for whom, by when — and what's slipping</small></h1>
+<div class="sub">Everything runs in this page. Nothing you paste leaves your machine, it keeps no account, and it never reads the clock — you type the date. <span id="fict">fictional sample data</span></div>
+<div id="banner"></div>
+<div class="wrap">
+  <div><label>the client list (CSV: Client, Contact, Email)</label><textarea id="ccsv" spellcheck="false"></textarea></div>
+  <div><label>the promise log (CSV: Client, Promise, Made, Due, Owner, Status, Done, At Stake, Note)</label><textarea id="pcsv" spellcheck="false"></textarea></div>
+</div>
+<div class="bar">
+  <button id="sample">Load the sample studio</button>
+  <button id="go" class="primary">Run the docket</button>
+  <div class="f"><label for="s_asof">as-of date (typed, never the clock)</label><input id="s_asof" type="text" placeholder="YYYY-MM-DD"></div>
+  <div class="f"><label for="s_grace">grace (working days)</label><input id="s_grace" type="number" value="0" min="0" step="1"></div>
+  <div class="f"><label for="s_soon">"due soon" horizon (working days)</label><input id="s_soon" type="number" value="5" min="1" step="1"></div>
+  <div class="f"><label for="s_watch">watch a client at (late + overdue)</label><input id="s_watch" type="number" value="3" min="1" step="1"></div>
+  <button id="dl">Download the ledger (CSV)</button>
+</div>
+<div id="out" style="display:none">
+<div id="tiles">
+  <div class="tile warn"><div class="k">On the docket</div><div class="v" id="t_docket">—</div><div class="s" id="t_docket_s"></div></div>
+  <div class="tile gold"><div class="k">At stake behind overdue</div><div class="v" id="t_stake">—</div><div class="s" id="t_stake_s"></div></div>
+  <div class="tile acc"><div class="k">Kept on time</div><div class="v" id="t_rel">—</div><div class="s" id="t_rel_s"></div></div>
+  <div class="tile"><div class="k">On watch</div><div class="v" id="t_watch">—</div><div class="s" id="t_watch_s"></div></div>
+</div>
+<section><h2>The docket — overdue and due today</h2>
+<div class="why" id="dockwhy"></div>
+<table><thead><tr><th>Client</th><th>The promise</th><th>Owner</th><th>Due</th><th class="n">Past due</th><th class="n">At stake</th></tr></thead><tbody id="dockT"></tbody></table></section>
+<section><h2>The ledger, client by client</h2>
+<div class="why">Kept-on-time rate counts only promises whose due date has been answered for — kept on time, kept late, or still overdue. Open promises aren't credit yet.</div>
+<table><thead><tr><th>Client</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Due today</th><th class="n">Soon</th><th class="n">Upcoming</th><th class="n">Rate</th><th class="n">At stake</th></tr></thead><tbody id="ledT"></tbody></table></section>
+<section><h2>Who promised what</h2>
+<div class="why">A workload chart, not a scoreboard — the point is seeing whose column is drowning before a client does.</div>
+<table><thead><tr><th>Person</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Still open</th><th class="n">Rate</th></tr></thead><tbody id="ownT"></tbody></table></section>
+<section><h2>Set aside, not forgotten</h2>
+<div class="why">Cancelled promises stay visible so the log and the ledger reconcile; a promise dated after the as-of hasn't been made yet at that reading.</div>
+<table><thead><tr><th>Kind</th><th>Client</th><th>The promise</th><th>Due</th><th>Note</th></tr></thead><tbody id="sideT"></tbody></table></section>
+<section><h2>Rows this page refused</h2>
+<div class="why">A row that can't be trusted is refused and listed with its reason — never silently swallowed, never guessed at.</div>
+<table><thead><tr><th>File</th><th class="n">Row</th><th>Client</th><th>Reason</th></tr></thead><tbody id="refT"></tbody></table></section>
+<section><h2>Promise histories</h2>
+<div class="why">One per client, built from the ledger above — print it before the call, or hand it over when someone asks what happened. If the self-audit fails, every history is withheld.</div>
+<div id="stmts"></div></section>
+<div id="recon"></div>
+</div>
+<footer>The Client Promise Tracker · built on "Build It With AI" · one file, no internet, no account. Working days are Monday to Friday; it has no holiday calendar. It keeps the ledger — it doesn't send the emails or write the apologies. Sample business (Stonebriar Kitchen &amp; Bath) is fictional.</footer>
+<script>// The Client Promise Tracker — final engine (Episode 22). All money in integer CENTS; all
+// rates in integer TENTHS of a percent; every division through halfUpDiv so two
+// implementations cannot drift. window.CP.build(clientsCsv, promisesCsv, settings) -> report.
+(function (root) {
+  "use strict";
+  const DEF = { graceWd: 0, dueSoonWd: 5, watchAt: 3 };
+
+  function splitCsv(text) {
+    const rows = [];
+    let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) {
+        if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+        else cell += ch;
+      } else if (ch === '"') q = true;
+      else if (ch === ",") { row.push(cell); cell = ""; }
+      else if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+      else if (ch !== "\r") cell += ch;
+    }
+    if (cell.length || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(r => r.length > 1 || (r[0] || "").trim() !== "");
+  }
+
+  const halfUpDiv = (a, b) => Math.floor((2 * a + b) / (2 * b));
+  const pctTenths = (a, b) => halfUpDiv(a * 1000, b);
+
+  function cents(s) {
+    const m = /^\s*\$?\s*(-?)([0-9][0-9,]*)(?:\.([0-9]{1,2}))?\s*$/.exec(s || "");
+    if (!m) return null;
+    const sign = m[1] === "-" ? -1 : 1;
+    const whole = parseInt(m[2].replace(/,/g, ""), 10);
+    const frac = m[3] ? (m[3].length === 1 ? +m[3] * 10 : +m[3]) : 0;
+    return sign * (whole * 100 + frac);
+  }
+  const DATE = /^\s*(\d{4})-(\d{2})-(\d{2})\s*$/;
+  function parseDate(s) {
+    const m = DATE.exec(s || "");
+    if (!m) return null;
+    const y = +m[1], mo = +m[2], d = +m[3];
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    const dt = new Date(Date.UTC(y, mo - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+    return { y, m: mo, d, t: dt.getTime() };
+  }
+  const DAY = 86400000;
+  const isWork = t => { const w = new Date(t).getUTCDay(); return w >= 1 && w <= 5; };
+  const iso = t => new Date(t).toISOString().slice(0, 10);
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // working days d with a < d <= b (0 when b <= a)
+  function wdAfterThrough(a, b) {
+    let n = 0;
+    for (let t = a + DAY; t <= b; t += DAY) if (isWork(t)) n++;
+    return n;
+  }
+  const fmtMoney = c => (c < 0 ? "-$" : "$") + Math.abs(c / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtTenths = t => (t / 10).toFixed(1) + "%";
+
+  function parse(clientsCsv, promisesCsv) {
+    const refusedClients = [], refusedPromises = [];
+    const cRows = splitCsv(clientsCsv), pRows = splitCsv(promisesCsv);
+    if (!cRows.length || !pRows.length) throw new Error("Paste both files (or load the sample studio).");
+    const ch = cRows[0].map(x => x.trim().toLowerCase());
+    const ph = pRows[0].map(x => x.trim().toLowerCase());
+    const ci = n => ch.indexOf(n), pi = n => ph.indexOf(n);
+    for (const n of ["client", "contact", "email"])
+      if (ci(n) === -1) throw new Error("The client file is missing a “" + n + "” column.");
+    for (const n of ["client", "promise", "made", "due", "owner", "status", "done", "at stake"])
+      if (pi(n) === -1) throw new Error("The promise file is missing a “" + n + "” column.");
+    const clients = new Map();      // lower(name) -> client
+    let clientRows = 0;
+    for (let r = 1; r < cRows.length; r++) {
+      const row = cRows[r]; clientRows++;
+      const line = r + 1;
+      const name = (row[ci("client")] || "").trim();
+      if (!name) { refusedClients.push({ line, name: "(blank)", reason: "no client name" }); continue; }
+      if (clients.has(name.toLowerCase())) { refusedClients.push({ line, name, reason: "duplicate client — the first row was kept" }); continue; }
+      const email = (row[ci("email")] || "").trim();
+      if (email && !EMAIL.test(email)) { refusedClients.push({ line, name, reason: "email unreadable: “" + email + "”" }); continue; }
+      clients.set(name.toLowerCase(), { name, contact: (row[ci("contact")] || "").trim(), email, line });
+    }
+    const promises = [];
+    let promiseRows = 0;
+    for (let r = 1; r < pRows.length; r++) {
+      const row = pRows[r]; promiseRows++;
+      const line = r + 1;
+      const rawName = (row[pi("client")] || "").trim();
+      const key = rawName.toLowerCase();
+      if (!rawName) { refusedPromises.push({ line, name: "(blank)", reason: "no client name" }); continue; }
+      if (!clients.has(key)) { refusedPromises.push({ line, name: rawName, reason: "unknown client — not on the client list" }); continue; }
+      const promise = (row[pi("promise")] || "").trim();
+      if (!promise) { refusedPromises.push({ line, name: rawName, reason: "no promise written down" }); continue; }
+      const made = parseDate(row[pi("made")]);
+      const due = parseDate(row[pi("due")]);
+      if (!made || !due) { refusedPromises.push({ line, name: rawName, reason: "date unreadable" }); continue; }
+      if (due.t < made.t) { refusedPromises.push({ line, name: rawName, reason: "due before it was made" }); continue; }
+      const status = (row[pi("status")] || "").trim().toLowerCase();
+      if (status !== "open" && status !== "done" && status !== "cancelled") {
+        refusedPromises.push({ line, name: rawName, reason: "status unreadable: “" + (row[pi("status")] || "").trim() + "”" }); continue;
+      }
+      let done = null;
+      if (status === "done") {
+        const dv = (row[pi("done")] || "").trim();
+        if (!dv) { refusedPromises.push({ line, name: rawName, reason: "marked done without a date" }); continue; }
+        done = parseDate(dv);
+        if (!done) { refusedPromises.push({ line, name: rawName, reason: "done date unreadable: “" + dv + "”" }); continue; }
+        if (done.t < made.t) { refusedPromises.push({ line, name: rawName, reason: "finished before it was made" }); continue; }
+      }
+      const sv = (row[pi("at stake")] || "").trim();
+      let stakeC = 0;
+      if (sv) {
+        const c = cents(sv);
+        if (c === null || c < 0) { refusedPromises.push({ line, name: rawName, reason: "at-stake amount unreadable: “" + sv + "”" }); continue; }
+        stakeC = c;
+      }
+      const note = pi("note") === -1 ? "" : (row[pi("note")] || "").trim();
+      promises.push({ line, key, name: clients.get(key).name, promise, made, due,
+        owner: (row[pi("owner")] || "").trim() || "(unassigned)", status, done, stakeC, note });
+    }
+    return { clients, promises, refusedClients, refusedPromises, clientRows, promiseRows };
+  }
+
+  function build(clientsCsv, promisesCsv, settings) {
+    const S = Object.assign({}, DEF, settings || {});
+    const asOf = parseDate(S.asOf);
+    if (!asOf) throw new Error("The Promise Tracker never reads the clock — type the as-of date.");
+    const P = parse(clientsCsv, promisesCsv);
+
+    // classify every counted row into exactly one bucket
+    const CL = { keptOnTime: [], keptLate: [], overdue: [], dueToday: [], dueSoon: [], upcoming: [], notYet: [], cancelled: [] };
+    for (const p of P.promises) {
+      if (p.status === "cancelled") { p.bucket = "cancelled"; CL.cancelled.push(p); continue; }
+      if (p.made.t > asOf.t) { p.bucket = "notYet"; CL.notYet.push(p); continue; }
+      const effDone = (p.status === "done" && p.done && p.done.t <= asOf.t) ? p.done : null;
+      if (effDone) {
+        p.lateWd = wdAfterThrough(p.due.t, effDone.t);
+        p.bucket = p.lateWd <= S.graceWd ? "keptOnTime" : "keptLate";
+      } else if (p.due.t < asOf.t) {
+        p.ageWd = wdAfterThrough(p.due.t, asOf.t);
+        p.bucket = "overdue";
+      } else if (p.due.t === asOf.t) {
+        p.bucket = "dueToday";
+      } else if (wdAfterThrough(asOf.t, p.due.t) <= S.dueSoonWd) {
+        p.bucket = "dueSoon";
+      } else {
+        p.bucket = "upcoming";
+      }
+      CL[p.bucket].push(p);
+    }
+
+    // per-client ledgers
+    const ledgers = [];
+    for (const c of P.clients.values()) {
+      const mine = P.promises.filter(p => p.key === c.name.toLowerCase())
+        .sort((a, b) => a.due.t - b.due.t || a.line - b.line);
+      const n = { keptOnTime: 0, keptLate: 0, overdue: 0, dueToday: 0, dueSoon: 0, upcoming: 0, notYet: 0, cancelled: 0 };
+      let atStakeOverdueC = 0, oldestOverdueWd = 0;
+      const rows = [];
+      for (const p of mine) {
+        n[p.bucket]++;
+        if (p.bucket === "overdue") { atStakeOverdueC += p.stakeC; if (p.ageWd > oldestOverdueWd) oldestOverdueWd = p.ageWd; }
+        rows.push({ line: p.line, promise: p.promise, made: iso(p.made.t), due: iso(p.due.t),
+          owner: p.owner, bucket: p.bucket, lateWd: p.lateWd || 0, ageWd: p.ageWd || 0,
+          stakeC: p.stakeC, note: p.note });
+      }
+      const cameDue = n.keptOnTime + n.keptLate + n.overdue;
+      const reliabilityTenths = cameDue > 0 ? pctTenths(n.keptOnTime, cameDue) : null;
+      const flags = [];
+      if (n.keptLate + n.overdue >= S.watchAt) flags.push("WATCH");
+      ledgers.push({ name: c.name, contact: c.contact, email: c.email, counts: n, cameDue,
+        reliabilityTenths, atStakeOverdueC, oldestOverdueWd, flags, rows });
+    }
+    ledgers.sort((a, b) => b.counts.overdue - a.counts.overdue
+      || b.counts.keptLate - a.counts.keptLate
+      || (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : a.name.toLowerCase() > b.name.toLowerCase() ? 1 : 0));
+
+    // per-owner table
+    const ownersM = new Map();
+    for (const p of P.promises) {
+      if (p.bucket === "cancelled" || p.bucket === "notYet") continue;
+      if (!ownersM.has(p.owner)) ownersM.set(p.owner, { owner: p.owner, keptOnTime: 0, keptLate: 0, overdue: 0, open: 0 });
+      const o = ownersM.get(p.owner);
+      if (p.bucket === "keptOnTime") o.keptOnTime++;
+      else if (p.bucket === "keptLate") o.keptLate++;
+      else if (p.bucket === "overdue") o.overdue++;
+      else o.open++;
+    }
+    const owners = [...ownersM.values()].map(o => {
+      const cameDue = o.keptOnTime + o.keptLate + o.overdue;
+      return { ...o, cameDue, reliabilityTenths: cameDue > 0 ? pctTenths(o.keptOnTime, cameDue) : null };
+    }).sort((a, b) => (b.cameDue + b.open) - (a.cameDue + a.open)
+      || (a.owner.toLowerCase() < b.owner.toLowerCase() ? -1 : a.owner.toLowerCase() > b.owner.toLowerCase() ? 1 : 0));
+
+    // the docket
+    const docket = [...CL.overdue, ...CL.dueToday]
+      .sort((a, b) => a.due.t - b.due.t || a.line - b.line)
+      .map(p => ({ line: p.line, name: p.name, promise: p.promise, owner: p.owner,
+        due: iso(p.due.t), ageWd: p.ageWd || 0, stakeC: p.stakeC }));
+
+    // company board — accumulated independently from the raw classified rows
+    let bDocket = 0, bOverdue = 0, bStakeC = 0, bKot = 0, bCameDue = 0;
+    for (const p of P.promises) {
+      if (p.bucket === "overdue") { bOverdue++; bDocket++; bStakeC += p.stakeC; }
+      if (p.bucket === "dueToday") bDocket++;
+      if (p.bucket === "keptOnTime") bKot++;
+      if (p.bucket === "keptOnTime" || p.bucket === "keptLate" || p.bucket === "overdue") bCameDue++;
+    }
+    const tOverdue = ledgers.reduce((s, l) => s + l.counts.overdue, 0);
+    const tDocket = ledgers.reduce((s, l) => s + l.counts.overdue + l.counts.dueToday, 0);
+    const tStakeC = ledgers.reduce((s, l) => s + l.atStakeOverdueC, 0);
+    const tKot = ledgers.reduce((s, l) => s + l.counts.keptOnTime, 0);
+    const tCameDue = ledgers.reduce((s, l) => s + l.cameDue, 0);
+
+    const counts = { clientRows: P.clientRows, promiseRows: P.promiseRows, clients: P.clients.size,
+      refusedClients: P.refusedClients.length, refusedPromises: P.refusedPromises.length,
+      keptOnTime: CL.keptOnTime.length, keptLate: CL.keptLate.length, overdue: CL.overdue.length,
+      dueToday: CL.dueToday.length, dueSoon: CL.dueSoon.length, upcoming: CL.upcoming.length,
+      notYet: CL.notYet.length, cancelled: CL.cancelled.length,
+      watch: ledgers.filter(l => l.flags.length).length };
+
+    const clientTie = counts.clientRows === counts.clients + counts.refusedClients;
+    const promiseTie = counts.promiseRows === counts.keptOnTime + counts.keptLate + counts.overdue
+      + counts.dueToday + counts.dueSoon + counts.upcoming + counts.notYet + counts.cancelled + counts.refusedPromises;
+    const boardTie = bDocket === tDocket && bOverdue === tOverdue && bStakeC === tStakeC
+      && bKot === tKot && bCameDue === tCameDue;
+    const shareClients = counts.clientRows ? pctTenths(counts.refusedClients, counts.clientRows) : 0;
+    const sharePromises = counts.promiseRows ? pctTenths(counts.refusedPromises, counts.promiseRows) : 0;
+    const shareOk = shareClients <= 250 && sharePromises <= 250;
+    const trusted = clientTie && promiseTie && boardTie && shareOk;
+    let banner = "";
+    if (!trusted) {
+      banner = "DO NOT TRUST THIS DOCKET — " + (!clientTie ? "the client rows do not tie."
+        : !promiseTie ? "the promise rows do not tie."
+        : !boardTie ? "the board does not re-total from the ledgers."
+        : "too many rows refused (clients " + (shareClients / 10).toFixed(1) + "%, promises " + (sharePromises / 10).toFixed(1) + "%). Fix the export and run it again.");
+    }
+
+    const companyReliabilityTenths = bCameDue > 0 ? pctTenths(bKot, bCameDue) : null;
+
+    // histories — built ONLY from report numbers; withheld entirely when not trusted
+    const BW = { keptOnTime: "KEPT ON TIME", keptLate: "KEPT LATE", overdue: "OVERDUE",
+      dueToday: "DUE TODAY", dueSoon: "DUE SOON", upcoming: "UPCOMING", notYet: "NOT YET ON THE BOOKS",
+      cancelled: "CANCELLED" };
+    const histories = [];
+    if (trusted) {
+      for (const l of ledgers) {
+        const lines = [];
+        lines.push("PROMISE HISTORY — " + l.name);
+        lines.push("as of " + S.asOf + (l.contact ? " · contact " + l.contact : "") + (l.email ? " · " + l.email : ""));
+        lines.push(l.reliabilityTenths === null ? "kept-on-time rate: none have come due yet"
+          : "kept-on-time rate: " + fmtTenths(l.reliabilityTenths) + " (" + l.counts.keptOnTime + " of " + l.cameDue + " that came due)");
+        lines.push("kept on time: " + l.counts.keptOnTime + " · kept late: " + l.counts.keptLate
+          + " · overdue: " + l.counts.overdue + " · due today: " + l.counts.dueToday
+          + " · due soon: " + l.counts.dueSoon + " · upcoming: " + l.counts.upcoming);
+        if (l.atStakeOverdueC > 0) lines.push("at stake behind the overdue: " + fmtMoney(l.atStakeOverdueC)
+          + " · oldest overdue: " + l.oldestOverdueWd + " working days");
+        for (const f of l.flags) lines.push("FLAG: " + f);
+        for (const r of l.rows) {
+          lines.push("  [" + BW[r.bucket] + "] " + r.promise + " — made " + r.made + ", due " + r.due + ", " + r.owner
+            + (r.bucket === "keptLate" ? " (" + r.lateWd + " working days late)" : "")
+            + (r.bucket === "overdue" ? " (" + r.ageWd + " working days past due)" : "")
+            + (r.stakeC ? " · at stake " + fmtMoney(r.stakeC) : "")
+            + (r.note ? " — " + r.note : ""));
+        }
+        histories.push({ name: l.name, text: lines.join("\n") });
+      }
+    }
+
+    return { settings: { asOf: S.asOf, graceWd: S.graceWd, dueSoonWd: S.dueSoonWd, watchAt: S.watchAt },
+      counts,
+      company: { docket: tDocket, overdue: tOverdue, atStakeOverdueC: tStakeC,
+        keptOnTime: tKot, cameDue: tCameDue, reliabilityTenths: companyReliabilityTenths,
+        boardDocket: bDocket, boardOverdue: bOverdue, boardStakeC: bStakeC, boardKot: bKot, boardCameDue: bCameDue },
+      docket, ledgers, owners,
+      notYet: CL.notYet.map(p => ({ line: p.line, name: p.name, promise: p.promise, made: iso(p.made.t), due: iso(p.due.t), owner: p.owner })),
+      cancelled: CL.cancelled.map(p => ({ line: p.line, name: p.name, promise: p.promise, due: iso(p.due.t), note: p.note })),
+      refusedClients: P.refusedClients, refusedPromises: P.refusedPromises,
+      histories, historiesWithheld: !trusted,
+      recon: { clientTie, promiseTie, boardTie, shareClients_tenths: shareClients,
+        sharePromises_tenths: sharePromises, trusted, banner } };
+  }
+
+  root.CP = { build, _cents: cents, _halfUpDiv: halfUpDiv, _wdAfterThrough: wdAfterThrough,
+    _fmtMoney: fmtMoney, _fmtTenths: fmtTenths };
+})(typeof window !== "undefined" ? window : (typeof module !== "undefined" ? module.exports : this));
+</script>
+<script>
+const SAMPLE_C = "Client,Contact,Email\nHarlan Pruett,Harlan,harlan.pruett@example.com\nMirabel Chu,Mirabel,mirabel.chu@example.com\nRochelle Vann,Rochelle,rochelle.vann@example.com\nGideon Ferreira,Gideon,gideon.f@example.com\nOdette Blankenship,Odette,odette.b@example.com\nSilas Trego,Silas,silas.trego@example.com\nNadia Rusk,Nadia,nadia.rusk@example.com\nEmory Caulfield,Emory,emory.caulfield@example.com\nBeatriz Lemos,Beatriz,beatriz.lemos@example.com\nWalt Jessup,Walt,walt.jessup@example.com\nFern Okada,Fern,fern.okada@example.com\nTamsin Doyle,Tamsin,tamsin.doyle@example.com\nMirabel Chu,Mirabel (mobile),mirabel.chu@example.com\nCorvid Printworks,front desk,frontdesk[at]example.com\n";
+const SAMPLE_P = "Client,Promise,Made,Due,Owner,Status,Done,At Stake,Note\nHarlan Pruett ,Email the revised change-order price,2026-09-28,2026-10-02,Dena,Open,,9400.00,kitchen remodel\nHARLAN PRUETT,Confirm the tile delivery date with the supplier,2026-10-12,2026-10-21,Marcus,Open,,5800.00,phone export\nHarlan Pruett ,Schedule the punch-list walkthrough,2026-10-19,2026-10-28,Dena,Open,,3400.00,\nHarlan Pruett,Send the final kitchen layout,2026-08-03,2026-08-14,Dena,Done,2026-08-12,,\nHarlan Pruett,Order the cabinet hardware,2026-09-01,2026-09-11,Marcus,Done,2026-09-10,,\nMirabel Chu ,Send the quartz countertop sample set,2026-10-05,2026-10-15,Yolanda,Open,,4100.00,\"trailing space, from the phone\"\nSILAS TREGO,Email the bathroom vanity quote,2026-10-13,2026-10-20,Theo,Open,,2750.00,\"caps, from the phone\"\nSilas Trego,Call back about the mirror recall,2026-10-26,2026-10-29,Theo,Open,,,\nnadia rusk,Send the warranty paperwork,2026-09-21,2026-10-09,Theo,Open,,1900.00,typed lowercase\nBeatriz Lemos,Confirm the installer's start date,2026-10-22,2026-11-02,Marcus,Open,,3500.00,\nWalt Jessup,Drop off the touch-up paint,2026-10-20,2026-11-04,Dena,Open,,,\nRochelle Vann,Send the updated project timeline,2026-10-29,2026-11-05,Marcus,Open,,2200.00,\nFern Okada,Email the grout color options,2026-11-02,2026-11-05,Yolanda,Open,,,\nEmory Caulfield,Call with the plumber's estimate,2026-10-30,2026-11-05,Theo,Open,,6900.00,\nOdette Blankenship,Confirm the delivery window,2026-10-30,2026-11-06,Yolanda,Open,,1250.00,\nGideon Ferreira,Send the lighting plan revisions,2026-10-27,2026-11-09,Dena,Open,,,\nTamsin Doyle,Email the appliance spec sheet,2026-11-02,2026-11-11,Marcus,Open,,,\nRochelle Vann,Mail the thank-you packet and final photos,2026-10-26,2026-11-10,Yolanda,Done,2027-01-09,,year typo on the phone\nWalt Jessup,Send the December install schedule,2026-10-26,2026-11-18,Marcus,Open,,,\nNadia Rusk,Email the January remodel proposal,2026-10-28,2026-12-04,Dena,Open,,12000.00,\nMirabel Chu,Send the holiday card and gift basket,2026-11-20,2026-12-01,Yolanda,Open,,,typed ahead\nGideon Ferreira,Send the revised contract,2026-09-07,2026-09-18,Dena,Done,2026-09-22,,\nEmory Caulfield,Email the demo-day checklist,2026-09-29,2026-10-06,Theo,Done,2026-10-08,,\nFern Okada,Call about the backsplash change,2026-10-07,2026-10-14,Theo,Done,2026-10-19,,\nTamsin Doyle,Send the corrected invoice split,2026-10-15,2026-10-23,Marcus,Done,2026-10-26,,\nWalt Jessup,Email the inspection results,2026-09-15,2026-09-25,Theo,Done,2026-10-02,,\nOdette Blankenship,Order the heated floor mat,2026-09-14,2026-10-02,Yolanda,Cancelled,,,client chose standard tile\nEmory Caulfield,Book the countertop templating,2026-10-12,2026-10-23,Marcus,Cancelled,,,rescheduled into the install\nWalk-in (Tuesday),Call back about a powder-room quote,2026-10-27,2026-11-03,Theo,Open,,,no client record\nBeatriz Lemos,Send the faucet comparison,2026-10-21,end of the month,Marcus,Open,,,\nGideon Ferreira,Email the updated drawings,2026-10-20,2026-10-13,Dena,Open,,,dates swapped\nMirabel Chu,Send the care instructions,2026-10-08,2026-10-16,Yolanda,Done,,,never dated\nNadia Rusk,Text when the glass shipment lands,2026-10-12,2026-10-16,Theo,probably,,,\nTamsin Doyle,Price the pantry pull-outs,2026-10-29,2026-11-25,Theo,Open,,ask Dena,\nMirabel Chu,Send the edge-profile options,2026-08-10,2026-08-21,Yolanda,Done,2026-08-19,,\nMirabel Chu,Book the slab viewing,2026-09-08,2026-09-18,Yolanda,Done,2026-09-16,,\nRochelle Vann,Email the signed contract copy,2026-08-17,2026-08-28,Dena,Done,2026-08-26,,\nRochelle Vann,Confirm the demo start date,2026-09-21,2026-10-01,Marcus,Done,2026-09-29,,\nGideon Ferreira,Send the permit application copy,2026-08-24,2026-09-04,Dena,Done,2026-09-02,,\nGideon Ferreira,Call with the electrician's window,2026-10-05,2026-10-09,Theo,Done,2026-10-08,,\nOdette Blankenship,Email the tile reorder confirmation,2026-09-28,2026-10-07,Yolanda,Done,2026-10-06,,\nOdette Blankenship,Send the updated payment schedule,2026-10-12,2026-10-21,Dena,Done,2026-10-20,,\nSilas Trego,Email the vanity measurement sheet,2026-09-14,2026-09-24,Theo,Done,2026-09-23,,\nNadia Rusk,Send the project photo archive,2026-09-01,2026-09-15,Dena,Done,2026-09-11,,\nEmory Caulfield,Confirm the dumpster pickup,2026-10-05,2026-10-13,Marcus,Done,2026-10-12,,\nEmory Caulfield,Email the paint color codes,2026-09-08,2026-09-17,Dena,Done,2026-09-15,,\nBeatriz Lemos,Send the cabinet warranty card,2026-09-22,2026-10-02,Marcus,Done,2026-10-01,,\nWalt Jessup,Email the final invoice,2026-09-28,2026-10-08,Marcus,Done,2026-10-07,,\nFern Okada,Send the grout maintenance guide,2026-09-10,2026-09-22,Yolanda,Done,2026-09-21,,\nFern Okada,Confirm the sealing appointment,2026-10-19,2026-10-27,Theo,Done,2026-10-26,,\nTamsin Doyle,Email the drawer-front samples list,2026-09-16,2026-09-28,Dena,Done,2026-09-24,,\nTamsin Doyle,Send the hinge replacement part,2026-10-06,2026-10-15,Theo,Done,2026-10-14,,\n";
+const $=id=>document.getElementById(id);
+const money=c=>(c<0?"-$":"$")+Math.abs(c/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const tenths=t=>t===null?"—":(t/10).toFixed(1)+"%";
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+let LAST=null;
+function settings(){
+  return {asOf:$("s_asof").value.trim(),
+    graceWd:Math.max(0,Math.round(parseFloat($("s_grace").value)||0)),
+    dueSoonWd:Math.max(1,Math.round(parseFloat($("s_soon").value)||5)),
+    watchAt:Math.max(1,Math.round(parseFloat($("s_watch").value)||3))};
+}
+function run(){
+  const c=$("ccsv").value,p=$("pcsv").value;
+  if(!c.trim()||!p.trim()){alert("Paste both files (or load the sample studio).");return;}
+  let R;
+  try{R=window.CP.build(c,p,settings());}catch(e){alert(e.message);return;}
+  LAST=R;
+  $("out").style.display="block";
+  const b=$("banner");
+  if(!R.recon.trusted){b.style.display="block";b.textContent=R.recon.banner;}
+  else b.style.display="none";
+  $("t_docket").textContent=String(R.company.docket);
+  $("t_docket_s").textContent=R.counts.overdue+" overdue · "+R.counts.dueToday+" due "+R.settings.asOf;
+  $("t_stake").textContent=money(R.company.atStakeOverdueC);
+  $("t_stake_s").textContent="work and relationships sitting behind "+R.counts.overdue+" overdue promises";
+  $("t_rel").textContent=tenths(R.company.reliabilityTenths);
+  $("t_rel_s").textContent=R.company.keptOnTime+" of "+R.company.cameDue+" that came due, kept on time";
+  $("t_watch").textContent=String(R.counts.watch);
+  $("t_watch_s").textContent="client"+(R.counts.watch===1?"":"s")+" at "+R.settings.watchAt+"+ late or overdue";
+  $("dockwhy").textContent="Sorted oldest first. Past-due ages are working days (Mon–Fri), read at the typed as-of date — the clock gets no vote.";
+  $("dockT").innerHTML=R.docket.map(d=>`<tr><td>${esc(d.name)}</td><td>${esc(d.promise)}</td><td>${esc(d.owner)}</td><td>${d.due}</td><td class="n">${d.ageWd?'<span class="age">'+d.ageWd+' wd</span>':"due today"}</td><td class="n">${d.stakeC?money(d.stakeC):"—"}</td></tr>`).join("")
+    ||`<tr><td colspan="6" class="note">Nothing overdue, nothing due today.</td></tr>`;
+  $("ledT").innerHTML=R.ledgers.map(L=>{
+    const chips=(L.flags.includes("WATCH")?'<span class="chip watch">WATCH</span>':"")+
+      (L.cameDue>0&&L.counts.keptLate===0&&L.counts.overdue===0?'<span class="chip clean">clean</span>':"");
+    return `<tr><td>${esc(L.name)}${chips}</td><td class="n">${L.counts.keptOnTime}</td><td class="n">${L.counts.keptLate}</td><td class="n ${L.counts.overdue?"neg":""}">${L.counts.overdue}</td><td class="n">${L.counts.dueToday}</td><td class="n">${L.counts.dueSoon}</td><td class="n">${L.counts.upcoming}</td><td class="n"><b>${tenths(L.reliabilityTenths)}</b></td><td class="n">${L.atStakeOverdueC?money(L.atStakeOverdueC):"—"}</td></tr>`;}).join("");
+  $("ownT").innerHTML=R.owners.map(o=>`<tr><td>${esc(o.owner)}</td><td class="n">${o.keptOnTime}</td><td class="n">${o.keptLate}</td><td class="n ${o.overdue?"neg":""}">${o.overdue}</td><td class="n">${o.open}</td><td class="n"><b>${tenths(o.reliabilityTenths)}</b></td></tr>`).join("");
+  const side=R.cancelled.map(g=>`<tr><td>cancelled</td><td>${esc(g.name)}</td><td>${esc(g.promise)}</td><td>${g.due}</td><td>${esc(g.note)}</td></tr>`)
+    .concat(R.notYet.map(nn=>`<tr><td>not yet made</td><td>${esc(nn.name)}</td><td>${esc(nn.promise)}</td><td>${nn.due}</td><td>made ${nn.made} — after the as-of date</td></tr>`));
+  $("sideT").innerHTML=side.join("")||`<tr><td colspan="5" class="note">Nothing cancelled, nothing post-dated.</td></tr>`;
+  const refRows=R.refusedClients.map(r=>`<tr><td>clients.csv</td><td class="n">${r.line}</td><td>${esc(r.name)}</td><td>${esc(r.reason)}</td></tr>`)
+    .concat(R.refusedPromises.map(r=>`<tr><td>promises.csv</td><td class="n">${r.line}</td><td>${esc(r.name)}</td><td>${esc(r.reason)}</td></tr>`));
+  $("refT").innerHTML=refRows.join("")||`<tr><td colspan="4" class="note">Nothing refused.</td></tr>`;
+  $("stmts").innerHTML=R.historiesWithheld
+    ? `<div class="note" id="withheld">Histories withheld — fix the refused rows and run it again.</div>`
+    : R.histories.map(s2=>`<div class="stmt">${esc(s2.text)}</div>`).join("");
+  const rc=R.recon;
+  $("recon").innerHTML=
+   `self-audit, run every time\n`+
+   `clients   ${R.counts.clientRows} rows in = ${R.counts.clients} clients + ${R.counts.refusedClients} refused  <span class="${rc.clientTie?"ok":"bad"}">${rc.clientTie?"ties":"DOES NOT TIE"}</span>\n`+
+   `promises  ${R.counts.promiseRows} rows in = ${R.counts.keptOnTime} on time + ${R.counts.keptLate} late + ${R.counts.overdue} overdue + ${R.counts.dueToday} due today + ${R.counts.dueSoon} soon + ${R.counts.upcoming} upcoming + ${R.counts.notYet} not yet + ${R.counts.cancelled} cancelled + ${R.counts.refusedPromises} refused  <span class="${rc.promiseTie?"ok":"bad"}">${rc.promiseTie?"ties":"DOES NOT TIE"}</span>\n`+
+   `board     docket, at-stake and kept-rate re-summed from the ${R.counts.clients} client ledgers  <span class="${rc.boardTie?"ok":"bad"}">${rc.boardTie?"ties":"DOES NOT TIE"}</span>\n`+
+   `refused   clients ${(rc.shareClients_tenths/10).toFixed(1)}% · promises ${(rc.sharePromises_tenths/10).toFixed(1)}%  <span class="${rc.shareClients_tenths<=250&&rc.sharePromises_tenths<=250?"ok":"bad"}">${rc.shareClients_tenths<=250&&rc.sharePromises_tenths<=250?"within tolerance":"over 25% — do not trust"}</span>`;
+  window.__done=true;
+}
+$("sample").addEventListener("click",()=>{$("ccsv").value=SAMPLE_C;$("pcsv").value=SAMPLE_P;$("fict").style.display="inline-block";if(!$("s_asof").value)$("s_asof").value="2026-11-05";window.__done=false;run();});
+$("go").addEventListener("click",()=>{window.__done=false;run();});
+for(const id of ["s_asof","s_grace","s_soon","s_watch"]) $(id).addEventListener("change",()=>{if(LAST){window.__done=false;run();}});
+$("dl").addEventListener("click",()=>{
+  if(!LAST){alert("Run the docket first.");return;}
+  const rows=[["Client","Kept on time","Kept late","Overdue","Due today","Due soon","Upcoming","Kept-on-time rate","At stake (overdue)","Flags"]].concat(
+    LAST.ledgers.map(L=>[L.name,L.counts.keptOnTime,L.counts.keptLate,L.counts.overdue,L.counts.dueToday,L.counts.dueSoon,L.counts.upcoming,L.reliabilityTenths===null?"":(L.reliabilityTenths/10).toFixed(1)+"%",(L.atStakeOverdueC/100).toFixed(2),L.flags.join("+")]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);
+  const a=document.createElement("a");a.href=u;a.download="promise_ledger.csv";a.click();URL.revokeObjectURL(u);
+});
+window.__loaded=true;
+</script></body></html>

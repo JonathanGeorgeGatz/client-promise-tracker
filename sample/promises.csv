@@ -1,0 +1,53 @@
+Client,Promise,Made,Due,Owner,Status,Done,At Stake,Note
+Harlan Pruett ,Email the revised change-order price,2026-09-28,2026-10-02,Dena,Open,,9400.00,kitchen remodel
+HARLAN PRUETT,Confirm the tile delivery date with the supplier,2026-10-12,2026-10-21,Marcus,Open,,5800.00,phone export
+Harlan Pruett ,Schedule the punch-list walkthrough,2026-10-19,2026-10-28,Dena,Open,,3400.00,
+Harlan Pruett,Send the final kitchen layout,2026-08-03,2026-08-14,Dena,Done,2026-08-12,,
+Harlan Pruett,Order the cabinet hardware,2026-09-01,2026-09-11,Marcus,Done,2026-09-10,,
+Mirabel Chu ,Send the quartz countertop sample set,2026-10-05,2026-10-15,Yolanda,Open,,4100.00,"trailing space, from the phone"
+SILAS TREGO,Email the bathroom vanity quote,2026-10-13,2026-10-20,Theo,Open,,2750.00,"caps, from the phone"
+Silas Trego,Call back about the mirror recall,2026-10-26,2026-10-29,Theo,Open,,,
+nadia rusk,Send the warranty paperwork,2026-09-21,2026-10-09,Theo,Open,,1900.00,typed lowercase
+Beatriz Lemos,Confirm the installer's start date,2026-10-22,2026-11-02,Marcus,Open,,3500.00,
+Walt Jessup,Drop off the touch-up paint,2026-10-20,2026-11-04,Dena,Open,,,
+Rochelle Vann,Send the updated project timeline,2026-10-29,2026-11-05,Marcus,Open,,2200.00,
+Fern Okada,Email the grout color options,2026-11-02,2026-11-05,Yolanda,Open,,,
+Emory Caulfield,Call with the plumber's estimate,2026-10-30,2026-11-05,Theo,Open,,6900.00,
+Odette Blankenship,Confirm the delivery window,2026-10-30,2026-11-06,Yolanda,Open,,1250.00,
+Gideon Ferreira,Send the lighting plan revisions,2026-10-27,2026-11-09,Dena,Open,,,
+Tamsin Doyle,Email the appliance spec sheet,2026-11-02,2026-11-11,Marcus,Open,,,
+Rochelle Vann,Mail the thank-you packet and final photos,2026-10-26,2026-11-10,Yolanda,Done,2027-01-09,,year typo on the phone
+Walt Jessup,Send the December install schedule,2026-10-26,2026-11-18,Marcus,Open,,,
+Nadia Rusk,Email the January remodel proposal,2026-10-28,2026-12-04,Dena,Open,,12000.00,
+Mirabel Chu,Send the holiday card and gift basket,2026-11-20,2026-12-01,Yolanda,Open,,,typed ahead
+Gideon Ferreira,Send the revised contract,2026-09-07,2026-09-18,Dena,Done,2026-09-22,,
+Emory Caulfield,Email the demo-day checklist,2026-09-29,2026-10-06,Theo,Done,2026-10-08,,
+Fern Okada,Call about the backsplash change,2026-10-07,2026-10-14,Theo,Done,2026-10-19,,
+Tamsin Doyle,Send the corrected invoice split,2026-10-15,2026-10-23,Marcus,Done,2026-10-26,,
+Walt Jessup,Email the inspection results,2026-09-15,2026-09-25,Theo,Done,2026-10-02,,
+Odette Blankenship,Order the heated floor mat,2026-09-14,2026-10-02,Yolanda,Cancelled,,,client chose standard tile
+Emory Caulfield,Book the countertop templating,2026-10-12,2026-10-23,Marcus,Cancelled,,,rescheduled into the install
+Walk-in (Tuesday),Call back about a powder-room quote,2026-10-27,2026-11-03,Theo,Open,,,no client record
+Beatriz Lemos,Send the faucet comparison,2026-10-21,end of the month,Marcus,Open,,,
+Gideon Ferreira,Email the updated drawings,2026-10-20,2026-10-13,Dena,Open,,,dates swapped
+Mirabel Chu,Send the care instructions,2026-10-08,2026-10-16,Yolanda,Done,,,never dated
+Nadia Rusk,Text when the glass shipment lands,2026-10-12,2026-10-16,Theo,probably,,,
+Tamsin Doyle,Price the pantry pull-outs,2026-10-29,2026-11-25,Theo,Open,,ask Dena,
+Mirabel Chu,Send the edge-profile options,2026-08-10,2026-08-21,Yolanda,Done,2026-08-19,,
+Mirabel Chu,Book the slab viewing,2026-09-08,2026-09-18,Yolanda,Done,2026-09-16,,
+Rochelle Vann,Email the signed contract copy,2026-08-17,2026-08-28,Dena,Done,2026-08-26,,
+Rochelle Vann,Confirm the demo start date,2026-09-21,2026-10-01,Marcus,Done,2026-09-29,,
+Gideon Ferreira,Send the permit application copy,2026-08-24,2026-09-04,Dena,Done,2026-09-02,,
+Gideon Ferreira,Call with the electrician's window,2026-10-05,2026-10-09,Theo,Done,2026-10-08,,
+Odette Blankenship,Email the tile reorder confirmation,2026-09-28,2026-10-07,Yolanda,Done,2026-10-06,,
+Odette Blankenship,Send the updated payment schedule,2026-10-12,2026-10-21,Dena,Done,2026-10-20,,
+Silas Trego,Email the vanity measurement sheet,2026-09-14,2026-09-24,Theo,Done,2026-09-23,,
+Nadia Rusk,Send the project photo archive,2026-09-01,2026-09-15,Dena,Done,2026-09-11,,
+Emory Caulfield,Confirm the dumpster pickup,2026-10-05,2026-10-13,Marcus,Done,2026-10-12,,
+Emory Caulfield,Email the paint color codes,2026-09-08,2026-09-17,Dena,Done,2026-09-15,,
+Beatriz Lemos,Send the cabinet warranty card,2026-09-22,2026-10-02,Marcus,Done,2026-10-01,,
+Walt Jessup,Email the final invoice,2026-09-28,2026-10-08,Marcus,Done,2026-10-07,,
+Fern Okada,Send the grout maintenance guide,2026-09-10,2026-09-22,Yolanda,Done,2026-09-21,,
+Fern Okada,Confirm the sealing appointment,2026-10-19,2026-10-27,Theo,Done,2026-10-26,,
+Tamsin Doyle,Email the drawer-front samples list,2026-09-16,2026-09-28,Dena,Done,2026-09-24,,
+Tamsin Doyle,Send the hinge replacement part,2026-10-06,2026-10-15,Theo,Done,2026-10-14,,

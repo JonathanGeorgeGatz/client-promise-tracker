@@ -1,0 +1,73 @@
+THE CLIENT PROMISE TRACKER — the exact prompts from the episode, word for word.
+Paste them into your AI assistant in order. Prompt 1 builds the first version; prompts 2 and 3
+are the fixes from the episode — they exist because the first two versions graded promises the
+business never kept, and hid the ones it was breaking.
+
+================================ PROMPT 1 ================================
+
+Build me a single HTML file I can open in my browser, no internet, no account, that keeps track
+of the promises my business makes to clients.
+
+What it's for: I run a small remodeling studio. Every week we tell clients things — "I'll email
+the revised price," "the installer will call Tuesday," "the samples go out Friday." Those
+commitments live in two places: a client list and a promise log we keep as spreadsheets. Nobody
+can say, on a given morning, what we owe people today, what we've already let slip, or which
+client is quietly collecting broken promises.
+
+Data in: two pastes.
+1) The client list: CSV with columns Client, Contact, Email.
+2) The promise log: CSV with columns Client, Promise, Made, Due, Owner, Status, Done, At Stake,
+   Note — what was promised, when we said it, when it's due, who said it, whether it's open,
+   done or cancelled, when it actually got done, and roughly what the job behind it is worth.
+
+What I want out: the morning docket — everything overdue and everything due today, oldest
+first; a per-client ledger with a kept-on-time rate; the dollars sitting behind the overdue
+ones; a per-person table of who promised what; and a printable promise history per client, so
+when someone says "you said Tuesday," the answer comes off a page instead of out of an
+argument.
+
+================================ PROMPT 2 ================================
+
+The first version flattered us. Rebuild the bookkeeping:
+
+- Kept is not a mood. A done promise is KEPT ON TIME or KEPT LATE, measured in working days
+  against its due date — Monday to Friday, weekends don't count against anyone.
+- A promise marked done with NO completion date is not evidence of anything. Refuse the row,
+  out loud, with its row number.
+- Matching is forgiving where it's safe: trim stray spaces, ignore case — a name typed from a
+  phone in caps is still the same client. But a client who isn't on the client list at all is
+  refused, not invented.
+- Cancelled promises are listed separately, charged to nothing, and never counted as kept.
+- Anything unreadable — a date that isn't a date, an amount that isn't an amount, a status that
+  isn't open, done or cancelled — is refused with the reason. Never guessed at, never skipped
+  in silence.
+
+================================ PROMPT 3 ================================
+
+Now make it trustworthy enough to settle the "you said Tuesday" argument.
+
+- The as-of date is typed into the page. The machine clock gets no vote: the same two files
+  must produce the same docket on any computer, on any day. A completion dated after the as-of
+  hasn't happened yet at that reading — the promise is still open then, not kept.
+- A promise whose Made date is after the as-of isn't on the books yet at that reading — list
+  it, charge it to nothing.
+- Every counted row lands in exactly ONE bucket: kept on time, kept late, overdue, due today,
+  due soon, upcoming, not yet made, or cancelled. Due today is its own bucket — the day's own
+  promises never go invisible.
+- All money in whole cents, all rates in whole tenths of a percent, one written-down rounding
+  rule (round half up). Grace is a setting in working days, not a kindness applied by hand.
+- The client list refuses duplicates — the first row is kept, the copy is listed — so nobody's
+  ledger gets counted twice.
+- The page audits itself on every run: client rows in = clients + refused; promise rows in =
+  the eight buckets + refused; and the board must re-total from the per-client ledgers to the
+  row and to the cent. If any audit fails, or too many rows were refused, print DO NOT TRUST
+  THIS DOCKET across the top, say why, and withhold every history — a wrong promise history is
+  worse than none.
+
+=========================== THE SECOND OPINION ===========================
+
+The episode also used an independent checker — the same written rules implemented again in
+Python by a separate session, sharing no code with the page — run on the same two files.
+checker.py is in this folder. Two implementations, one spec: 209 paired runs over generated
+studios compared 68,292 values and disagreed on none. When they do disagree, one of them is
+wrong, and it is worth knowing which before a client calls.
