@@ -22,12 +22,12 @@ WHAT'S IN THIS FOLDER
                            future, counts a duplicated client twice)
 
 HOW TO USE IT ON YOUR OWN PROMISES
-1. Open Promise_Tracker.html. Click "Load the sample studio" to see it work.
+1. Open Promise_Tracker.html. Press "Try the sample business" to see it work.
 2. Make your client list a CSV with columns: Client, Contact, Email.
 3. Make your promise log a CSV with columns: Client, Promise, Made, Due, Owner, Status, Done,
    At Stake, Note. Status is open / done / cancelled; At Stake is optional — what the job or
    relationship behind the promise is worth, so the overdue pile gets a price tag.
-4. Type the as-of date, set your grace and horizon, and read the refusals panel before you
+4. Drop in (or paste) both files, type the as-of date, set your grace and horizon, and read the refusals panel before you
    trust anything. The tool sends nothing and stores nothing.
 
 If your export names its columns differently, hand your file and PROMPTS.txt's first prompt to

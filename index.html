@@ -2,93 +2,285 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The Client Promise Tracker</title>
+<meta name="description" content="Free, offline client promise tracker: what you said you'd do, for whom, by when — the docket, kept-on-time rates and the money behind overdue promises.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b0d1f'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%23ffffff' stroke-opacity='.15' stroke-width='7'/%3E%3Cpath d='M32 13a19 19 0 0 1 17.6 26' fill='none' stroke='%2342e8e0' stroke-width='7' stroke-linecap='round'/%3E%3Cpath d='M45.4 45.4a19 19 0 0 1-21.7 3.7' fill='none' stroke='%23ff5fa2' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E">
+<!-- IDENTITY: "Glass Studio" — midnight aurora canvas, frosted-glass panels, display sans with light/bold contrast, glowing promise ring. (11-27 identity rule) -->
 <style>
-:root{--ink:#1E2A2E;--dim:#5E6E72;--line:#D5DDDC;--paper:#F3F6F5;--panel:#FFFFFF;--acc:#0E5E6F;--gold:#9A7B2D;--warn:#A4312A;--ok:#2F6B4F;
---mono:"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,"Segoe UI",Inter,Helvetica,Arial,sans-serif}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font:16px/1.5 var(--sans);padding:26px 30px 60px}
-h1{font-size:26px;letter-spacing:-.01em}
-h1 small{font-size:14px;color:var(--dim);font-weight:400;margin-left:10px}
-.sub{color:var(--dim);font-size:14px;margin:4px 0 16px}
-#banner{display:none;background:var(--warn);color:#fff;font-weight:800;font-size:19px;padding:12px 18px;border-radius:10px;margin:0 0 16px}
-.wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-textarea{width:100%;height:118px;font:12px/1.4 var(--mono);border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel);color:var(--ink)}
-label{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:5px}
-.bar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
-.bar .f{display:flex;flex-direction:column;gap:5px}
-input[type=text]{font:15px var(--sans);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:130px}
-input[type=number]{font:15px var(--sans);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);width:96px}
-button{font:15px/1 var(--sans);font-weight:700;padding:11px 20px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
-button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
-#fict{display:none;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);border-radius:7px;padding:4px 10px}
-#tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:6px 0 20px}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.tile .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
-.tile .v{font-size:29px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums;padding:2px 0}
-.tile .s{font-size:12px;color:var(--dim);margin-top:3px}
-.tile.acc .v{color:var(--acc)} .tile.warn .v{color:var(--warn)} .tile.gold .v{color:var(--gold)}
-section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
-section h2{font-size:17px;margin-bottom:4px}
-section .why{font-size:13px;color:var(--dim);margin-bottom:10px}
+:root{
+  --page:#eceaf3; --page2:#e4e1ef; --glass:rgba(255,255,255,.62); --glass-2:rgba(255,255,255,.42); --edge:rgba(255,255,255,.85); --edge-2:rgba(21,23,43,.08);
+  --ink:#15172b; --mute:#55587a; --dim:#8a8daa; --line:rgba(21,23,43,.09);
+  --pink:#d6337a; --pink-hi:#ff5fa2; --cyan:#0b8f8a; --cyan-hi:#42e8e0; --amber:#b5640c; --amber-hi:#ffb86b;
+  --bad:#c42a5f; --bad-bg:rgba(255,95,162,.14); --good:#0b7f74; --good-bg:rgba(66,232,224,.16);
+  --night:#0b0d1f; --night2:#14183a;
+  --shadow:0 1px 0 rgba(255,255,255,.7) inset,0 18px 40px -22px rgba(30,24,80,.35);
+  --f:"SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --m:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --page:#0b0d1f; --page2:#0e1128; --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.035); --edge:rgba(255,255,255,.14); --edge-2:rgba(255,255,255,.06);
+  --ink:#eef0ff; --mute:#a6abd0; --dim:#6f7499; --line:rgba(255,255,255,.08);
+  --pink:#ff5fa2; --cyan:#42e8e0; --amber:#ffb86b;
+  --bad:#ff7ab3; --bad-bg:rgba(255,95,162,.12); --good:#5ef0e8; --good-bg:rgba(66,232,224,.1);
+  --shadow:0 1px 0 rgba(255,255,255,.08) inset,0 22px 50px -24px rgba(0,0,0,.8);}}
+:root[data-theme=dark]{
+  --page:#0b0d1f; --page2:#0e1128; --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.035); --edge:rgba(255,255,255,.14); --edge-2:rgba(255,255,255,.06);
+  --ink:#eef0ff; --mute:#a6abd0; --dim:#6f7499; --line:rgba(255,255,255,.08);
+  --pink:#ff5fa2; --cyan:#42e8e0; --amber:#ffb86b;
+  --bad:#ff7ab3; --bad-bg:rgba(255,95,162,.12); --good:#5ef0e8; --good-bg:rgba(66,232,224,.1);
+  --shadow:0 1px 0 rgba(255,255,255,.08) inset,0 22px 50px -24px rgba(0,0,0,.8);}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;color:var(--ink);font:15.5px/1.55 var(--f);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(900px 520px at 8% 700px,rgba(255,95,162,.14),transparent 65%),radial-gradient(900px 600px at 95% 1100px,rgba(66,232,224,.14),transparent 65%),radial-gradient(800px 600px at 20% 2400px,rgba(140,110,255,.10),transparent 65%),var(--page);min-height:100vh}
+html{background:var(--page)}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 16px}
+@media(min-width:760px){.wrap{padding:0 28px}}
+/* aurora hero (dark in both modes) */
+.hero{position:relative;color:#eef0ff;overflow:hidden;padding-bottom:70px;
+  background:radial-gradient(700px 380px at 18% 10%,rgba(255,95,162,.35),transparent 60%),radial-gradient(760px 420px at 88% 30%,rgba(66,232,224,.28),transparent 62%),radial-gradient(600px 300px at 55% 120%,rgba(120,90,255,.22),transparent 60%),linear-gradient(160deg,#0b0d1f 0%,#14183a 60%,#0b0d1f 100%)}
+.hero:after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:linear-gradient(transparent,var(--page));pointer-events:none}
+.nav{position:relative;z-index:2;display:flex;align-items:center;gap:12px;height:64px}
+.mark{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;font-size:16px;white-space:nowrap}
+.mark svg{flex:none;filter:drop-shadow(0 0 8px rgba(66,232,224,.5))}
+.pill{font:600 12px var(--f);color:#c9fbf8;background:rgba(66,232,224,.1);border:1px solid rgba(66,232,224,.3);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.sp{flex:1}
+.nav a{color:rgba(238,240,255,.72);text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
+.nav a:hover{color:#fff}
+.tbtn{appearance:none;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#eef0ff;border-radius:999px;padding:7px 13px;font:600 14px var(--f);cursor:pointer;backdrop-filter:blur(8px)}
+@media(max-width:680px){.hide-s{display:none}}
+.herogrid{position:relative;z-index:2;display:grid;gap:30px;align-items:center;padding-top:26px}
+@media(min-width:920px){.herogrid{grid-template-columns:1.25fr 1fr}}
+.eyebrow{font:600 12.5px var(--f);letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(90deg,#ff8cc0,#7ff3ec);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-size:clamp(34px,5.6vw,62px);line-height:1;letter-spacing:-.045em;margin:14px 0 16px;font-weight:300}
+h1 b{font-weight:800;background:linear-gradient(95deg,#ff5fa2 10%,#c8a6ff 50%,#42e8e0 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:rgba(238,240,255,.74);font-size:17px;max-width:56ch;margin:0}
+/* ring gauge */
+.ringcard{justify-self:center;width:100%;max-width:400px;padding:22px;border-radius:28px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 70px -30px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.1) inset;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.ringwrap{position:relative;aspect-ratio:1;max-width:300px;margin:0 auto}
+.ringwrap svg{width:100%;height:100%;display:block;overflow:visible}
+.ringc{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none}
+.ringc .big{font-size:clamp(40px,6vw,56px);font-weight:200;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.ringc .lbl{font:600 11px var(--f);letter-spacing:.16em;text-transform:uppercase;color:rgba(238,240,255,.6);margin-top:6px}
+.ringc .sm{font-size:12.5px;color:rgba(238,240,255,.7);margin-top:4px}
+.rlegend{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;margin-top:14px;font-size:12px;color:rgba(238,240,255,.75)}
+.rlegend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+.seg{transition:opacity .3s}
+@keyframes draw{from{stroke-dashoffset:var(--len)}to{stroke-dashoffset:0}}
+.seg.anim{animation:draw .7s cubic-bezier(.2,.8,.2,1) both}
+/* glass panels */
+.glass{background:var(--glass);border:1px solid var(--edge);border-radius:20px;box-shadow:var(--shadow);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass{background:#ffffff} :root[data-theme=dark] .glass{background:#15182f}
+  .ringcard{background:#161a38}}
+@media (prefers-color-scheme:dark){@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root:not([data-theme=light]) .glass{background:#15182f}}}
+main.wrap{position:relative;z-index:3;margin-top:-56px}
+.intake{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:820px){.intake{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.zone{padding:16px}
+.drop{position:relative;display:flex;gap:14px;align-items:center;padding:16px;border-radius:16px;border:1.5px dashed color-mix(in srgb,var(--cyan) 45%,transparent);background:var(--glass-2);cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--pink);background:color-mix(in srgb,var(--pink-hi) 8%,var(--glass-2))}
+.drop.loaded{border-style:solid;border-color:color-mix(in srgb,var(--cyan) 60%,transparent)}
+.drop .ic{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#ff5fa2,#7b6dff 55%,#42e8e0);box-shadow:0 8px 20px -8px rgba(255,95,162,.6)}
+.drop h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
+.drop .hint{color:var(--mute);font-size:13px}
+.drop .cols{font:11.5px var(--m);color:var(--dim);margin-top:2px;overflow-wrap:anywhere}
+.drop .state{font-weight:700;font-size:13px;color:var(--good);margin-top:3px}
+.drop .state:empty{display:none}
+.drop input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.drop:focus-within{outline:2px solid var(--cyan);outline-offset:2px}
+details.paste{margin-top:10px}
+details.paste summary{cursor:pointer;color:var(--mute);font-size:13px;font-weight:600;list-style:none}
+details.paste summary::-webkit-details-marker{display:none}
+details.paste summary:before{content:"＋ "}
+details.paste[open] summary:before{content:"－ "}
+textarea{width:100%;height:120px;margin-top:8px;font:12px/1.45 var(--m);border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--glass-2);color:var(--ink);resize:vertical}
+.controls{margin-top:14px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:4px;flex:1 1 150px;min-width:0}
+.f label{font:600 11px var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.f input{font:600 15px var(--f);color:var(--ink);background:var(--glass-2);border:1px solid var(--line);border-radius:999px;padding:9px 14px;width:100%;min-width:0}
+.f input:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 6px}
+.actions .sp{flex:1}
+.btn{appearance:none;border:1px solid color-mix(in srgb,var(--ink) 14%,transparent);border-radius:999px;padding:12px 20px;font:700 15px var(--f);cursor:pointer;color:var(--ink);background:var(--glass);backdrop-filter:blur(10px);transition:transform .1s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{border:0;color:#fff;background:linear-gradient(100deg,#e2347f,#8a5cff 55%,#14b8b0);box-shadow:0 12px 28px -12px rgba(226,52,127,.7)}
+.btn.run{border-color:color-mix(in srgb,var(--cyan) 50%,transparent)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+@media(max-width:560px){.actions{gap:8px}.actions .btn{flex:1 1 40%;padding:11px 14px;font-size:14px}.actions .sp{display:none}}
+.status{color:var(--mute);font-size:13px;margin:2px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#fict{display:none;font:700 11px var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--pink);border:1px solid color-mix(in srgb,var(--pink) 50%,transparent);border-radius:999px;padding:4px 10px;margin-left:4px}
+#msg{display:none;margin:10px 0 0;padding:12px 16px;border-radius:16px;background:var(--bad-bg);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);color:var(--bad);font-weight:600}
+/* verdict */
+#banner,#okbanner{display:none;margin:22px 0 14px;padding:16px 20px;border-radius:20px;font-weight:800;font-size:19px;letter-spacing:-.01em;align-items:center;gap:14px}
+#banner{background:var(--bad-bg);color:var(--bad);border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);box-shadow:0 0 0 1px rgba(255,95,162,.08),0 14px 40px -18px rgba(255,95,162,.6)}
+#okbanner{background:var(--good-bg);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent)}
+#okbanner small{display:block;font-weight:500;font-size:14px;color:var(--mute);letter-spacing:0}
+/* tiles */
+#tiles{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr));margin:6px 0 4px}
+@media(min-width:900px){#tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.tile{padding:18px 18px 16px;min-width:0;position:relative;overflow:hidden}
+.tile:before{content:"";position:absolute;left:18px;right:18px;top:0;height:2px;border-radius:2px;background:var(--line)}
+.tile.warn:before{background:linear-gradient(90deg,var(--pink-hi),transparent)} .tile.gold:before{background:linear-gradient(90deg,var(--amber-hi),transparent)} .tile.acc:before{background:linear-gradient(90deg,var(--cyan-hi),transparent)}
+.tile .k{font:600 11px var(--f);letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.tile .v{font-size:clamp(23px,3.4vw,40px);font-weight:250;letter-spacing:-.04em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.1;white-space:nowrap}
+.tile .s{font-size:12.5px;color:var(--mute);margin-top:4px}
+.tile.warn .v{color:var(--pink);font-weight:600} .tile.gold .v{color:var(--amber)} .tile.acc .v{color:var(--cyan)}
+/* sections */
+.sec{margin:30px 0 10px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec h2{margin:0;font-size:22px;font-weight:300;letter-spacing:-.03em}
+.sec h2 b{font-weight:750}
+.sec .n{font:700 11.5px var(--f);color:var(--cyan);background:var(--good-bg);border-radius:999px;padding:3px 10px}
+.why{font-size:13.5px;color:var(--mute);margin:0 0 10px;max-width:80ch}
+.tbl{overflow-x:auto;padding:6px 8px}
 table{width:100%;border-collapse:collapse;font-size:14px}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);text-align:left;padding:5px 8px;border-bottom:2px solid var(--line)}
-td{padding:6px 8px;border-top:1px solid #E6ECEA;font-variant-numeric:tabular-nums;vertical-align:top}
-td.n,th.n{text-align:right}
-.chip{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:1px}
-.chip.watch{color:#fff;background:var(--warn)}
-.chip.clean{color:var(--dim);background:#E6ECEA}
-.neg{color:var(--warn);font-weight:700}
-.age{font-weight:700;color:var(--warn)}
-.stmt{white-space:pre-wrap;font:13px/1.6 var(--mono);background:#EDF2F0;border:1px solid #DCE4E1;border-radius:10px;padding:12px 14px;margin:8px 0}
-#recon{font:13.5px/1.7 var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px}
-#recon .ok{color:var(--ok);font-weight:700} #recon .bad{color:var(--warn);font-weight:700}
-footer{margin-top:24px;font-size:12.5px;color:var(--dim)}
-@media (max-width:900px){#tiles{grid-template-columns:repeat(2,1fr)}.wrap{grid-template-columns:1fr}}
+th{font:600 11px var(--f);text-transform:uppercase;letter-spacing:.12em;color:var(--dim);text-align:left;padding:11px 12px;white-space:nowrap}
+td{padding:11px 12px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:top}
+tbody tr:hover td{background:color-mix(in srgb,var(--cyan-hi) 7%,transparent)}
+td.n,th.n{text-align:right;white-space:nowrap}
+.tbl td{white-space:nowrap}
+#dockT td:nth-child(2),#sideT td:nth-child(3),#sideT td:nth-child(5),#refT td:nth-child(4){white-space:normal;min-width:190px}
+td:first-child{font-weight:650}
+.chip{display:inline-block;font:700 10.5px var(--f);letter-spacing:.08em;border-radius:999px;padding:3px 9px;margin-left:6px;vertical-align:1px}
+.chip.watch{color:#fff;background:linear-gradient(90deg,#e2347f,#ff5fa2);box-shadow:0 0 12px rgba(255,95,162,.45)}
+.chip.clean{color:var(--good);background:var(--good-bg)}
+.neg{color:var(--pink);font-weight:700}
+.age{font-weight:700;color:var(--pink)}
+.note{color:var(--mute)}
+.grid2{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.stmt{white-space:pre-wrap;font:12.5px/1.65 var(--m);padding:14px 16px;margin:10px 0;border-radius:16px;background:var(--glass-2);border:1px solid var(--line);overflow-wrap:anywhere}
+#stmts{padding:8px 12px}
+#withheld{padding:12px 4px;color:var(--bad);font-weight:700}
+#recon{padding:14px 16px}
+#recon .row{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}
+#recon .row:first-child{border-top:0}
+#recon .row b{font:600 11px var(--f);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);min-width:72px}
+#recon .row span.t{flex:1 1 300px;color:var(--mute);font-family:var(--m);font-size:12.5px;overflow-wrap:anywhere}
+#recon .ok,#recon .bad{font:700 11.5px var(--f);border-radius:999px;padding:3px 10px;white-space:nowrap}
+#recon .ok{color:var(--good);background:var(--good-bg)} #recon .bad{color:var(--bad);background:var(--bad-bg)}
+#recon .head{font:600 11px var(--f);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+.empty{margin-top:22px;padding:46px 20px;text-align:center;color:var(--mute)}
+.empty b{display:block;color:var(--ink);font-size:20px;font-weight:300;letter-spacing:-.02em;margin-bottom:4px}
+footer{color:var(--dim);font-size:13px;padding:34px 0 54px;margin-top:40px;border-top:1px solid var(--line);display:grid;gap:8px}
+footer a{color:var(--mute)}
+.fade{animation:fade .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{.nav,.intake,.controls,.actions,#msg,footer a,.rlegend{display:none!important}
+  body{background:#fff;color:#000}.hero{background:#fff;color:#000;padding-bottom:0}.hero:after{display:none}.sub{color:#333}
+  h1 b,.eyebrow{color:#000;-webkit-text-fill-color:#000;background:none}.ringcard{background:#0b0d1f;box-shadow:none}
+  main.wrap{margin-top:0}.glass{background:#fff;box-shadow:none;backdrop-filter:none;border-color:#ccc}}
 </style></head><body>
-<h1>The Client Promise Tracker <small>what you said you'd do, for whom, by when — and what's slipping</small></h1>
-<div class="sub">Everything runs in this page. Nothing you paste leaves your machine, it keeps no account, and it never reads the clock — you type the date. <span id="fict">fictional sample data</span></div>
-<div id="banner"></div>
-<div class="wrap">
-  <div><label>the client list (CSV: Client, Contact, Email)</label><textarea id="ccsv" spellcheck="false"></textarea></div>
-  <div><label>the promise log (CSV: Client, Promise, Made, Due, Owner, Status, Done, At Stake, Note)</label><textarea id="pcsv" spellcheck="false"></textarea></div>
-</div>
-<div class="bar">
-  <button id="sample">Load the sample studio</button>
-  <button id="go" class="primary">Run the docket</button>
-  <div class="f"><label for="s_asof">as-of date (typed, never the clock)</label><input id="s_asof" type="text" placeholder="YYYY-MM-DD"></div>
-  <div class="f"><label for="s_grace">grace (working days)</label><input id="s_grace" type="number" value="0" min="0" step="1"></div>
-  <div class="f"><label for="s_soon">"due soon" horizon (working days)</label><input id="s_soon" type="number" value="5" min="1" step="1"></div>
-  <div class="f"><label for="s_watch">watch a client at (late + overdue)</label><input id="s_watch" type="number" value="3" min="1" step="1"></div>
-  <button id="dl">Download the ledger (CSV)</button>
-</div>
-<div id="out" style="display:none">
-<div id="tiles">
-  <div class="tile warn"><div class="k">On the docket</div><div class="v" id="t_docket">—</div><div class="s" id="t_docket_s"></div></div>
-  <div class="tile gold"><div class="k">At stake behind overdue</div><div class="v" id="t_stake">—</div><div class="s" id="t_stake_s"></div></div>
-  <div class="tile acc"><div class="k">Kept on time</div><div class="v" id="t_rel">—</div><div class="s" id="t_rel_s"></div></div>
-  <div class="tile"><div class="k">On watch</div><div class="v" id="t_watch">—</div><div class="s" id="t_watch_s"></div></div>
-</div>
-<section><h2>The docket — overdue and due today</h2>
-<div class="why" id="dockwhy"></div>
-<table><thead><tr><th>Client</th><th>The promise</th><th>Owner</th><th>Due</th><th class="n">Past due</th><th class="n">At stake</th></tr></thead><tbody id="dockT"></tbody></table></section>
-<section><h2>The ledger, client by client</h2>
-<div class="why">Kept-on-time rate counts only promises whose due date has been answered for — kept on time, kept late, or still overdue. Open promises aren't credit yet.</div>
-<table><thead><tr><th>Client</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Due today</th><th class="n">Soon</th><th class="n">Upcoming</th><th class="n">Rate</th><th class="n">At stake</th></tr></thead><tbody id="ledT"></tbody></table></section>
-<section><h2>Who promised what</h2>
-<div class="why">A workload chart, not a scoreboard — the point is seeing whose column is drowning before a client does.</div>
-<table><thead><tr><th>Person</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Still open</th><th class="n">Rate</th></tr></thead><tbody id="ownT"></tbody></table></section>
-<section><h2>Set aside, not forgotten</h2>
-<div class="why">Cancelled promises stay visible so the log and the ledger reconcile; a promise dated after the as-of hasn't been made yet at that reading.</div>
-<table><thead><tr><th>Kind</th><th>Client</th><th>The promise</th><th>Due</th><th>Note</th></tr></thead><tbody id="sideT"></tbody></table></section>
-<section><h2>Rows this page refused</h2>
-<div class="why">A row that can't be trusted is refused and listed with its reason — never silently swallowed, never guessed at.</div>
-<table><thead><tr><th>File</th><th class="n">Row</th><th>Client</th><th>Reason</th></tr></thead><tbody id="refT"></tbody></table></section>
-<section><h2>Promise histories</h2>
-<div class="why">One per client, built from the ledger above — print it before the call, or hand it over when someone asks what happened. If the self-audit fails, every history is withheld.</div>
-<div id="stmts"></div></section>
-<div id="recon"></div>
-</div>
-<footer>The Client Promise Tracker · built on "Build It With AI" · one file, no internet, no account. Working days are Monday to Friday; it has no holiday calendar. It keeps the ledger — it doesn't send the emails or write the apologies. Sample business (Stonebriar Kitchen &amp; Bath) is fictional.</footer>
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav">
+      <span class="mark"><svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="22" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="8"/><path d="M32 10a22 22 0 0 1 20.4 30.2" fill="none" stroke="#42e8e0" stroke-width="8" stroke-linecap="round"/><path d="M47.6 47.6a22 22 0 0 1-25.2 4.2" fill="none" stroke="#ff5fa2" stroke-width="8" stroke-linecap="round"/></svg>The Client Promise Tracker</span>
+      <span class="pill hide-s">● runs offline · nothing leaves this page</span>
+      <span class="sp"></span>
+      <a class="hide-s" href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">More free tools</a>
+      <button class="tbtn" id="theme" aria-label="Toggle dark mode">◐</button>
+    </nav>
+    <div class="herogrid">
+      <div>
+        <div class="eyebrow">Build It With AI · Episode 22 · free tool</div>
+        <h1>What you said you'd do, for whom, by when — <b>and what's slipping.</b></h1>
+        <p class="sub">Drop in your client list and your promise log. You get the morning docket, a kept-on-time rate per client and per person, and the money sitting behind every overdue promise. It never reads the clock — you type the date.</p>
+      </div>
+      <div class="ringcard" aria-live="polite">
+        <div class="ringwrap"><svg id="ring" viewBox="0 0 240 240" role="img" aria-label="Promise ring"><circle cx="120" cy="120" r="96" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="16"/></svg>
+          <div class="ringc"><div><div class="big" id="r_rate">—</div><div class="lbl">kept on time</div><div class="sm" id="r_sub">every promise, one segment</div></div></div></div>
+        <div class="rlegend" id="rlegend"><span><i style="background:#42e8e0"></i>on time</span><span><i style="background:#ffb86b"></i>late</span><span><i style="background:#ff5fa2"></i>overdue</span><span><i style="background:#ffffff"></i>due today</span><span><i style="background:rgba(66,232,224,.45)"></i>soon</span><span><i style="background:rgba(255,255,255,.28)"></i>upcoming</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intake">
+    <div class="glass zone">
+      <label class="drop" id="dropc"><input type="file" id="fc" accept=".csv,text/csv,text/plain" aria-label="Choose your client list CSV">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.6c2 .7 3.2 2.6 3.6 5.4"/></svg></span>
+        <span><h3>1 · Your client list</h3><span class="hint">Drop the CSV here or click to choose.</span>
+        <div class="cols">Client, Contact, Email</div><div class="state" id="statec"></div></span></label>
+      <details class="paste"><summary>or paste it</summary><label class="hint" for="ccsv" style="display:block;margin-top:6px">the client list (CSV: Client, Contact, Email)</label><textarea id="ccsv" spellcheck="false"></textarea></details>
+    </div>
+    <div class="glass zone">
+      <label class="drop" id="dropp"><input type="file" id="fp" accept=".csv,text/csv,text/plain" aria-label="Choose your promise log CSV">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 9l2 2 4-4"/><path d="M8 15h8"/></svg></span>
+        <span><h3>2 · Your promise log</h3><span class="hint">Drop the CSV here or click to choose.</span>
+        <div class="cols">Client, Promise, Made, Due, Owner, Status, Done, At Stake, Note</div><div class="state" id="statep"></div></span></label>
+      <details class="paste"><summary>or paste it</summary><label class="hint" for="pcsv" style="display:block;margin-top:6px">the promise log (CSV: Client, Promise, Made, Due, Owner, Status, Done, At Stake, Note)</label><textarea id="pcsv" spellcheck="false"></textarea></details>
+    </div>
+  </div>
+
+  <div class="glass controls">
+    <div class="f"><label for="s_asof">as-of date (typed, never the clock)</label><input id="s_asof" type="text" placeholder="YYYY-MM-DD"></div>
+    <div class="f"><label for="s_grace">grace (working days)</label><input id="s_grace" type="number" value="0" min="0" step="1"></div>
+    <div class="f"><label for="s_soon">“due soon” horizon (working days)</label><input id="s_soon" type="number" value="5" min="1" step="1"></div>
+    <div class="f"><label for="s_watch">watch a client at (late + overdue)</label><input id="s_watch" type="number" value="3" min="1" step="1"></div>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="sample">Try the sample business</button>
+    <button class="btn run" id="go">Run the docket</button>
+    <span class="sp"></span>
+    <button class="btn" id="dl" disabled>Download the ledger (CSV)</button>
+    <button class="btn" id="print" disabled>Print / PDF</button>
+  </div>
+  <div class="status">Sample: Stonebriar Kitchen &amp; Bath · 52 promises · fictional<span id="fict">fictional sample data</span></div>
+  <div id="msg" role="alert"></div>
+
+  <div class="glass empty fade" id="empty"><b>No promises read yet</b>Drop in both files, or press “Try the sample business” to see a full docket on made-up data.</div>
+
+  <div id="banner" role="alert"></div>
+  <div id="okbanner"><div>The docket ties.<small id="okwhy"></small></div></div>
+
+  <div id="out" style="display:none">
+    <div id="tiles" class="fade">
+      <div class="glass tile warn"><div class="k">On the docket</div><div class="v" id="t_docket">—</div><div class="s" id="t_docket_s"></div></div>
+      <div class="glass tile gold"><div class="k">At stake behind overdue</div><div class="v" id="t_stake">—</div><div class="s" id="t_stake_s"></div></div>
+      <div class="glass tile acc"><div class="k">Kept on time</div><div class="v" id="t_rel">—</div><div class="s" id="t_rel_s"></div></div>
+      <div class="glass tile"><div class="k">On watch</div><div class="v" id="t_watch">—</div><div class="s" id="t_watch_s"></div></div>
+    </div>
+
+    <div class="sec"><h2><b>The docket</b> — overdue and due today</h2></div>
+    <p class="why" id="dockwhy"></p>
+    <div class="glass tbl fade"><table><thead><tr><th>Client</th><th>The promise</th><th>Owner</th><th>Due</th><th class="n">Past due</th><th class="n">At stake</th></tr></thead><tbody id="dockT"></tbody></table></div>
+
+    <div class="sec"><h2><b>The ledger,</b> client by client</h2></div>
+    <p class="why">Kept-on-time rate counts only promises whose due date has been answered for — kept on time, kept late, or still overdue. Open promises aren't credit yet.</p>
+    <div class="glass tbl fade"><table><thead><tr><th>Client</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Due today</th><th class="n">Soon</th><th class="n">Upcoming</th><th class="n">Rate</th><th class="n">At stake</th></tr></thead><tbody id="ledT"></tbody></table></div>
+
+    <div class="grid2">
+      <div><div class="sec"><h2><b>Who</b> promised what</h2></div>
+        <p class="why">A workload chart, not a scoreboard — the point is seeing whose column is drowning before a client does.</p>
+        <div class="glass tbl fade"><table><thead><tr><th>Person</th><th class="n">On time</th><th class="n">Late</th><th class="n">Overdue</th><th class="n">Still open</th><th class="n">Rate</th></tr></thead><tbody id="ownT"></tbody></table></div></div>
+      <div><div class="sec"><h2><b>Set aside,</b> not forgotten</h2></div>
+        <p class="why">Cancelled promises stay visible so the log and the ledger reconcile; a promise dated after the as-of hasn't been made yet at that reading.</p>
+        <div class="glass tbl fade"><table><thead><tr><th>Kind</th><th>Client</th><th>The promise</th><th>Due</th><th>Note</th></tr></thead><tbody id="sideT"></tbody></table></div></div>
+    </div>
+
+    <div class="grid2">
+      <div><div class="sec"><h2><b>Rows</b> this page refused</h2></div>
+        <p class="why">A row that can't be trusted is refused and listed with its reason — never silently swallowed, never guessed at.</p>
+        <div class="glass tbl fade"><table><thead><tr><th>File</th><th class="n">Row</th><th>Client</th><th>Reason</th></tr></thead><tbody id="refT"></tbody></table></div></div>
+      <div><div class="sec"><h2><b>Self-audit,</b> every run</h2></div>
+        <p class="why">Every row in is accounted for, and the board is re-summed from the client ledgers.</p>
+        <div class="glass fade" id="recon"></div></div>
+    </div>
+
+    <div class="sec"><h2><b>Promise histories</b></h2></div>
+    <p class="why">One per client, built from the ledger above — print it before the call, or hand it over when someone asks what happened. If the self-audit fails, every history is withheld.</p>
+    <div class="glass fade" id="stmts"></div>
+  </div>
+
+  <footer>
+    <div>Working days are Monday to Friday; it has no holiday calendar. It keeps the ledger — it doesn't send the emails or write the apologies. At Stake is your estimate of the relationship behind a promise, not an invoice.</div>
+    <div>Sample business (Stonebriar Kitchen &amp; Bath) is fictional; every address is @example.com. One file, no internet, no account. Not legal advice.</div>
+    <div>Made on <a href="https://www.youtube.com/@jonathangatz" target="_blank" rel="noopener">Build It With AI</a> · <a href="https://jonathangeorgegatz.github.io/tools/" target="_blank" rel="noopener">all the free tools</a></div>
+  </footer>
+</main>
+
 <script>// The Client Promise Tracker — final engine (Episode 22). All money in integer CENTS; all
 // rates in integer TENTHS of a percent; every division through halfUpDiv so two
 // implementations cannot drift. window.CP.build(clientsCsv, promisesCsv, settings) -> report.
@@ -389,16 +581,49 @@ function settings(){
     dueSoonWd:Math.max(1,Math.round(parseFloat($("s_soon").value)||5)),
     watchAt:Math.max(1,Math.round(parseFloat($("s_watch").value)||3))};
 }
+function say(t){const m=$("msg");if(t){m.textContent=t;m.style.display="block";}else{m.textContent="";m.style.display="none";}}
+const RCOL={keptOnTime:"#42e8e0",keptLate:"#ffb86b",overdue:"#ff5fa2",dueToday:"#ffffff",dueSoon:"rgba(66,232,224,.45)",upcoming:"rgba(255,255,255,.28)"};
+const RORD=["keptOnTime","keptLate","overdue","dueToday","dueSoon","upcoming"];
+function ring(R){
+  const svg=$("ring"),NS="http://www.w3.org/2000/svg";
+  while(svg.childNodes.length>1)svg.removeChild(svg.lastChild);
+  const rows=[];for(const L of R.ledgers)for(const r of L.rows)rows.push(r.bucket);
+  rows.sort((a,b)=>RORD.indexOf(a)-RORD.indexOf(b));
+  const n=rows.length,rad=96,C=2*Math.PI*rad,gap=n>60?1.2:2.4,anim=!matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!svg.querySelector("defs")){}
+  const defs=document.createElementNS(NS,"defs");
+  defs.innerHTML='<filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  svg.appendChild(defs);
+  const g=document.createElementNS(NS,"g");g.setAttribute("transform","rotate(-90 120 120)");svg.appendChild(g);
+  rows.forEach((b,i)=>{
+    const len=Math.max(0.6,C/n-gap);
+    const c=document.createElementNS(NS,"circle");
+    c.setAttribute("cx","120");c.setAttribute("cy","120");c.setAttribute("r",String(rad));c.setAttribute("fill","none");
+    c.setAttribute("stroke",RCOL[b]);c.setAttribute("stroke-width",b==="overdue"?"20":"16");
+    c.setAttribute("stroke-dasharray",len+" "+(C-len));c.setAttribute("stroke-dashoffset",String(-(C/n)*i));
+    if(b==="overdue"||b==="keptOnTime")c.setAttribute("filter","url(#glow)");
+    c.setAttribute("class","seg");
+    if(anim){c.style.opacity="0";c.style.transition="opacity .25s "+Math.min(i*12,700)+"ms";requestAnimationFrame(()=>requestAnimationFrame(()=>{c.style.opacity="1";}));}
+    g.appendChild(c);
+  });
+  $("r_rate").textContent=tenths(R.company.reliabilityTenths);
+  $("r_sub").textContent=n+" promises · "+R.counts.overdue+" overdue";
+}
 function run(){
   const c=$("ccsv").value,p=$("pcsv").value;
-  if(!c.trim()||!p.trim()){alert("Paste both files (or load the sample studio).");return;}
+  if(!c.trim()||!p.trim()){say("Add both files — the client list and the promise log — or press “Try the sample business”.");return;}
   let R;
-  try{R=window.CP.build(c,p,settings());}catch(e){alert(e.message);return;}
+  try{R=window.CP.build(c,p,settings());}catch(e){say(e.message);return;}
+  say("");
   LAST=R;
+  $("empty").style.display="none";
   $("out").style.display="block";
+  $("dl").disabled=false;$("print").disabled=false;
   const b=$("banner");
-  if(!R.recon.trusted){b.style.display="block";b.textContent=R.recon.banner;}
-  else b.style.display="none";
+  if(!R.recon.trusted){b.style.display="flex";b.textContent=R.recon.banner;$("okbanner").style.display="none";}
+  else{b.style.display="none";$("okbanner").style.display="flex";
+    $("okwhy").textContent="Every client row and promise row is accounted for, and the board re-sums from the "+R.counts.clients+" client ledgers. "+R.counts.overdue+" overdue, "+R.counts.dueToday+" due today.";}
+  ring(R);
   $("t_docket").textContent=String(R.company.docket);
   $("t_docket_s").textContent=R.counts.overdue+" overdue · "+R.counts.dueToday+" due "+R.settings.asOf;
   $("t_stake").textContent=money(R.company.atStakeOverdueC);
@@ -424,25 +649,43 @@ function run(){
   $("stmts").innerHTML=R.historiesWithheld
     ? `<div class="note" id="withheld">Histories withheld — fix the refused rows and run it again.</div>`
     : R.histories.map(s2=>`<div class="stmt">${esc(s2.text)}</div>`).join("");
-  const rc=R.recon;
-  $("recon").innerHTML=
-   `self-audit, run every time\n`+
-   `clients   ${R.counts.clientRows} rows in = ${R.counts.clients} clients + ${R.counts.refusedClients} refused  <span class="${rc.clientTie?"ok":"bad"}">${rc.clientTie?"ties":"DOES NOT TIE"}</span>\n`+
-   `promises  ${R.counts.promiseRows} rows in = ${R.counts.keptOnTime} on time + ${R.counts.keptLate} late + ${R.counts.overdue} overdue + ${R.counts.dueToday} due today + ${R.counts.dueSoon} soon + ${R.counts.upcoming} upcoming + ${R.counts.notYet} not yet + ${R.counts.cancelled} cancelled + ${R.counts.refusedPromises} refused  <span class="${rc.promiseTie?"ok":"bad"}">${rc.promiseTie?"ties":"DOES NOT TIE"}</span>\n`+
-   `board     docket, at-stake and kept-rate re-summed from the ${R.counts.clients} client ledgers  <span class="${rc.boardTie?"ok":"bad"}">${rc.boardTie?"ties":"DOES NOT TIE"}</span>\n`+
-   `refused   clients ${(rc.shareClients_tenths/10).toFixed(1)}% · promises ${(rc.sharePromises_tenths/10).toFixed(1)}%  <span class="${rc.shareClients_tenths<=250&&rc.sharePromises_tenths<=250?"ok":"bad"}">${rc.shareClients_tenths<=250&&rc.sharePromises_tenths<=250?"within tolerance":"over 25% — do not trust"}</span>`;
+  const rc=R.recon, ok=(v,y,nn)=>`<span class="${v?"ok":"bad"}">${v?y:nn}</span>`;
+  const shareOk=rc.shareClients_tenths<=250&&rc.sharePromises_tenths<=250;
+  $("recon").innerHTML=`<div class="head">self-audit, run every time</div>`+
+   `<div class="row"><b>clients</b><span class="t">${R.counts.clientRows} rows in = ${R.counts.clients} clients + ${R.counts.refusedClients} refused</span>${ok(rc.clientTie,"ties","DOES NOT TIE")}</div>`+
+   `<div class="row"><b>promises</b><span class="t">${R.counts.promiseRows} rows in = ${R.counts.keptOnTime} on time + ${R.counts.keptLate} late + ${R.counts.overdue} overdue + ${R.counts.dueToday} due today + ${R.counts.dueSoon} soon + ${R.counts.upcoming} upcoming + ${R.counts.notYet} not yet + ${R.counts.cancelled} cancelled + ${R.counts.refusedPromises} refused</span>${ok(rc.promiseTie,"ties","DOES NOT TIE")}</div>`+
+   `<div class="row"><b>board</b><span class="t">docket, at-stake and kept-rate re-summed from the ${R.counts.clients} client ledgers</span>${ok(rc.boardTie,"ties","DOES NOT TIE")}</div>`+
+   `<div class="row"><b>refused</b><span class="t">clients ${(rc.shareClients_tenths/10).toFixed(1)}% · promises ${(rc.sharePromises_tenths/10).toFixed(1)}%</span>${ok(shareOk,"within tolerance","over 25% — do not trust")}</div>`;
   window.__done=true;
 }
-$("sample").addEventListener("click",()=>{$("ccsv").value=SAMPLE_C;$("pcsv").value=SAMPLE_P;$("fict").style.display="inline-block";if(!$("s_asof").value)$("s_asof").value="2026-11-05";window.__done=false;run();});
-$("go").addEventListener("click",()=>{window.__done=false;run();});
+function jump(){if(window.innerWidth<900){const t=$("banner").style.display==="flex"?$("banner"):$("okbanner");if(t&&t.scrollIntoView)t.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});}}
+function loaded(which,name,text){
+  $(which==="c"?"statec":"statep").textContent="✓ "+name+" · "+Math.max(0,text.trim().split(/\r?\n/).length-1)+" rows";
+  $(which==="c"?"dropc":"dropp").classList.add("loaded");
+}
+function hook(input,drop,which){
+  const read=f=>f.text().then(t=>{$(which==="c"?"ccsv":"pcsv").value=t;loaded(which,f.name,t);
+    if($("ccsv").value.trim()&&$("pcsv").value.trim()){if(!$("s_asof").value.trim()){say("Both files are in — type the as-of date (the tracker never reads the clock), then run the docket.");$("s_asof").focus();return;}window.__done=false;run();jump();}});
+  $(input).addEventListener("change",e=>{const f=e.target.files[0];if(f)read(f);});
+  ["dragenter","dragover"].forEach(ev=>$(drop).addEventListener(ev,e=>{e.preventDefault();$(drop).classList.add("over");}));
+  ["dragleave","drop"].forEach(ev=>$(drop).addEventListener(ev,e=>{e.preventDefault();$(drop).classList.remove("over");}));
+  $(drop).addEventListener("drop",e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)read(f);});
+}
+hook("fc","dropc","c");hook("fp","dropp","p");
+$("sample").addEventListener("click",()=>{$("ccsv").value=SAMPLE_C;$("pcsv").value=SAMPLE_P;$("fict").style.display="inline-block";if(!$("s_asof").value)$("s_asof").value="2026-11-05";
+  loaded("c","stonebriar-clients.csv",SAMPLE_C);loaded("p","stonebriar-promises.csv",SAMPLE_P);window.__done=false;run();jump();});
+$("go").addEventListener("click",()=>{window.__done=false;run();jump();});
 for(const id of ["s_asof","s_grace","s_soon","s_watch"]) $(id).addEventListener("change",()=>{if(LAST){window.__done=false;run();}});
 $("dl").addEventListener("click",()=>{
-  if(!LAST){alert("Run the docket first.");return;}
+  if(!LAST){say("Run the docket first.");return;}
   const rows=[["Client","Kept on time","Kept late","Overdue","Due today","Due soon","Upcoming","Kept-on-time rate","At stake (overdue)","Flags"]].concat(
     LAST.ledgers.map(L=>[L.name,L.counts.keptOnTime,L.counts.keptLate,L.counts.overdue,L.counts.dueToday,L.counts.dueSoon,L.counts.upcoming,L.reliabilityTenths===null?"":(L.reliabilityTenths/10).toFixed(1)+"%",(L.atStakeOverdueC/100).toFixed(2),L.flags.join("+")]));
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
   const b=new Blob([csv],{type:"text/csv"});const u=URL.createObjectURL(b);
-  const a=document.createElement("a");a.href=u;a.download="promise_ledger.csv";a.click();URL.revokeObjectURL(u);
+  const a=document.createElement("a");a.href=u;a.download="promise_ledger.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
 });
+$("print").addEventListener("click",()=>window.print());
+$("theme").addEventListener("click",()=>{const d=document.documentElement;
+  d.dataset.theme=(d.dataset.theme==="dark"||(!d.dataset.theme&&matchMedia("(prefers-color-scheme: dark)").matches))?"light":"dark";});
 window.__loaded=true;
 </script></body></html>
